@@ -19,7 +19,6 @@ export const CONTACT = {
   whatsapp: "https://wa.me/5584991203743",
   linkedin: "https://www.linkedin.com/in/felipelemos777",
   github: "https://github.com/flplemos",
-  portfolio: "https://fl-portfolio-seven.vercel.app/",
 };
 
 // ─── NAV / SECTIONS (order drives the 3D scroll keyframes) ────────────────

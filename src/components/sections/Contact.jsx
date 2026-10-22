@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Copy, Globe, Mail, MapPin, Phone } from "lucide-react";
+import { Check, Copy, Mail, MapPin, Phone } from "lucide-react";
 import { CONTACT, PROFILE } from "../../data/profile";
 import { GithubIcon, LinkedinIcon, WhatsappIcon } from "../BrandIcons";
 import SectionHeader from "../SectionHeader";
@@ -9,7 +9,6 @@ const CHANNELS = [
   { icon: WhatsappIcon, label: "WhatsApp", value: "Enviar mensagem", href: CONTACT.whatsapp, external: true },
   { icon: LinkedinIcon, label: "LinkedIn", value: "in/felipelemos777", href: CONTACT.linkedin, external: true },
   { icon: GithubIcon, label: "GitHub", value: "flplemos", href: CONTACT.github, external: true },
-  { icon: Globe, label: "Portfólio", value: "fl-portfolio-seven.vercel.app", href: CONTACT.portfolio, external: true },
 ];
 
 export default function Contact() {
