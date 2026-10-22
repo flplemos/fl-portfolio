@@ -1,10 +1,31 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fl-portfolio</title>
+    <meta name="theme-color" content="#020617" />
+    <meta name="color-scheme" content="dark light" />
+    <script>
+      (function () {
+        var t;
+        try { t = localStorage.getItem("theme"); } catch (e) {}
+        if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+        if (t === "light") document.querySelector('meta[name="theme-color"]').setAttribute("content", "#f8fafc");
+      })();
+    </script>
+    <meta
+      name="description"
+      content="Felipe Lemos — Desenvolvedor Mendix na TrueChange. Full-Stack (React, Node.js, Python) e AI & Automation (RAG, Multi-Agent Systems)."
+    />
+    <title>Felipe Lemos — Desenvolvedor Mendix, Full-Stack & AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    />
   </head>
   <body>
     <div id="root"></div>
