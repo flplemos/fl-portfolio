@@ -50,13 +50,13 @@ export const STACK = [
     key: "front",
     title: "Front-End & UI",
     blurb: "Interfaces responsivas, acessíveis e com atenção à experiência.",
-    items: ["React", "JavaScript (ES6+)", "HTML5", "CSS3", "Bootstrap 5", "UX Design"],
+    items: ["React", "TypeScript", "JavaScript (ES6+)", "Tailwind CSS", "HTML5", "CSS3", "PWA", "UX Design"],
   },
   {
     key: "back",
     title: "Back-End, Dados & DevOps",
     blurb: "APIs, persistência e versionamento com boas práticas.",
-    items: ["Node.js", "MySQL", "Git", "GitHub", "Algoritmos e Lógica de Programação"],
+    items: ["Node.js", "Express", "Supabase", "PostgreSQL", "MySQL", "MongoDB + Prisma", "Git", "GitHub", "Vercel"],
   },
 ];
 
