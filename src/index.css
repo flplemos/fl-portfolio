@@ -954,37 +954,12 @@ main,
 @media (min-width: 640px) {
   .projects {
     grid-template-columns: repeat(2, 1fr);
-  }
-  .project.is-featured {
-    grid-column: span 2;
+    grid-auto-rows: 1fr; /* every card the same size */
   }
 }
 @media (min-width: 1024px) {
   .projects {
     grid-template-columns: repeat(3, 1fr);
-  }
-  .project.is-featured {
-    grid-column: span 2;
-    grid-row: span 2;
-    background:
-      radial-gradient(circle at 85% 15%, rgba(34, 197, 94, 0.18), transparent 55%),
-      var(--glass-bg);
-  }
-  .project.is-featured .project-title {
-    font-size: 1.75rem;
-  }
-  /* The featured card spans two rows whose height comes from the cards beside it:
-     let the preview fill whatever space the text leaves instead of forcing 16:10. */
-  .project.is-featured .project-media {
-    aspect-ratio: auto;
-    flex: 1 1 0;
-    min-height: 280px;
-  }
-  .project.is-featured .project-media img {
-    object-position: center;
-  }
-  .project.is-featured .project-desc {
-    flex: none;
   }
 }
 

@@ -10,14 +10,14 @@ export default function Projects() {
         <SectionHeader index={4} eyebrow="Projetos" title="Coisas que construí." id="proj-title" />
         <ul className="projects" data-reveal-group>
           {PROJECTS.map((p) => (
-            <li key={p.title} className={`glass project ${p.highlight ? "is-featured" : ""}`}>
+            <li key={p.title} className="glass project">
               <div className="project-media">
                 {p.image ? (
                   <img
                     src={p.image}
                     alt={`Prévia de ${p.title}`}
-                    width={p.highlight ? 1200 : 800}
-                    height={p.highlight ? 750 : 500}
+                    width={800}
+                    height={500}
                     loading="lazy"
                     decoding="async"
                   />
