@@ -225,6 +225,11 @@ a {
   width: 100%;
   height: 100%;
 }
+/* Light theme: dark text sits over the object while it travels between sections, so the
+   whole scene stays slightly translucent there. */
+:root[data-theme="light"] .scene {
+  opacity: 0.6;
+}
 /* Single-column layouts put text over the object: keep it as a faded backdrop there. */
 @media (max-width: 899px) {
   .scene {
@@ -728,13 +733,13 @@ main,
   padding: var(--space-lg);
   transition:
     border-color var(--dur-base),
-    transform var(--dur-base) var(--ease-out),
+    translate var(--dur-base) var(--ease-out),
     background-color var(--dur-base);
 }
 .bento-card:hover {
   border-color: var(--glass-border-hover);
   background: var(--glass-bg-hover);
-  transform: translateY(-4px);
+  translate: 0 -4px; /* not transform: GSAP owns that for the reveal */
 }
 .bento-head {
   display: flex;
@@ -876,14 +881,14 @@ main,
   padding: var(--space-lg);
   transition:
     border-color var(--dur-base),
-    transform var(--dur-base) var(--ease-out),
+    translate var(--dur-base) var(--ease-out),
     background-color var(--dur-base),
     box-shadow var(--dur-base);
 }
 .project:hover {
   border-color: var(--glass-border-hover);
   background: var(--glass-bg-hover);
-  transform: translateY(-4px);
+  translate: 0 -4px; /* not transform: GSAP owns that for the reveal */
   box-shadow: var(--shadow-xl), 0 0 0 1px rgba(34, 197, 94, 0.15);
 }
 .project-title {
@@ -1077,11 +1082,11 @@ main,
   border-radius: var(--radius-md);
   transition:
     border-color var(--dur-base),
-    transform var(--dur-base) var(--ease-out);
+    translate var(--dur-base) var(--ease-out);
 }
 .channel:hover {
   border-color: var(--glass-border-hover);
-  transform: translateY(-3px);
+  translate: 0 -3px; /* not transform: GSAP owns that for the reveal */
 }
 .channel > svg {
   flex: none;

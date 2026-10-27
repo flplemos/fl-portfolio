@@ -54,9 +54,10 @@ const toColors = (p) => KEYFRAMES.map((_, i) => new Color(p[i % p.length]));
 const LIGHT_COLORS = { dark: toColors(PALETTES.dark), light: toColors(PALETTES.light) };
 
 const THEME_STYLE = {
-  dark: { core: "#334155", shell: 0.3, dots: "#38bdf8", dotsOpacity: 0.75, ambient: 0.5, sun: 1.2 },
-  // Light theme: pale core so dark text over it keeps its contrast.
-  light: { core: "#e2e8f0", shell: 0.4, dots: "#0369a1", dotsOpacity: 0.5, ambient: 1.1, sun: 0.9 },
+  dark: { core: "#334155", metal: 0.7, rough: 0.3, shell: 0.3, dots: "#38bdf8", dotsOpacity: 0.75, ambient: 0.5, sun: 1.2 },
+  // Light theme: pale, matte core (metal with nothing to reflect renders dark) so dark text
+  // over it keeps its contrast.
+  light: { core: "#e2e8f0", metal: 0.05, rough: 0.6, shell: 0.4, dots: "#0369a1", dotsOpacity: 0.5, ambient: 1.1, sun: 0.9 },
 };
 
 // Points on a tilted torus-like band around the core: the "nodes" of a system.
@@ -117,6 +118,8 @@ function buildScene(canvas) {
   const setTheme = (theme) => {
     const t = THEME_STYLE[theme];
     coreMat.color.set(t.core);
+    coreMat.metalness = t.metal;
+    coreMat.roughness = t.rough;
     shellMat.opacity = t.shell;
     dotsMat.color.set(t.dots);
     dotsMat.opacity = t.dotsOpacity;
