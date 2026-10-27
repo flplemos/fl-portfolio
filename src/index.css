@@ -381,7 +381,7 @@ main,
   background: var(--color-accent);
 }
 .badge-accent {
-  margin: 0 0 var(--space-md);
+  margin: 0;
   width: fit-content;
 }
 
@@ -889,6 +889,36 @@ main,
 .project-title {
   font-size: 1.1875rem;
 }
+/* Preview bleeds to the card edges; 16:10 box is reserved up front (no layout shift). */
+.project-media {
+  margin: calc(var(--space-lg) * -1) calc(var(--space-lg) * -1) 0;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: 1px solid var(--glass-border);
+  background: var(--color-muted);
+}
+.project-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  transition: transform 600ms var(--ease-out);
+}
+.project:hover .project-media img {
+  transform: scale(1.04);
+}
+.project-media-fallback {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--color-accent-fg);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(34, 197, 94, 0.22), transparent 60%),
+    radial-gradient(circle at 80% 90%, rgba(56, 189, 248, 0.2), transparent 55%),
+    var(--color-muted);
+}
 .project-desc {
   flex: 1;
 }
@@ -936,13 +966,25 @@ main,
   .project.is-featured {
     grid-column: span 2;
     grid-row: span 2;
-    justify-content: flex-end;
     background:
       radial-gradient(circle at 85% 15%, rgba(34, 197, 94, 0.18), transparent 55%),
       var(--glass-bg);
   }
   .project.is-featured .project-title {
     font-size: 1.75rem;
+  }
+  /* The featured card spans two rows whose height comes from the cards beside it:
+     let the preview fill whatever space the text leaves instead of forcing 16:10. */
+  .project.is-featured .project-media {
+    aspect-ratio: auto;
+    flex: 1 1 0;
+    min-height: 280px;
+  }
+  .project.is-featured .project-media img {
+    object-position: center;
+  }
+  .project.is-featured .project-desc {
+    flex: none;
   }
 }
 

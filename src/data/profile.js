@@ -98,50 +98,57 @@ export const EXPERIENCES = [
   },
 ];
 
-// ─── PROJECTS (preserved from the previous version) ───────────────────────
+// ─── PROJECTS ──────────────────────────────────────────────────────────────
+// image: 16:10 WebP preview in /public/projects (captured from the live site).
 export const PROJECTS = [
+  {
+    title: "Ana Nails · Gestão",
+    desc: "PWA mobile-first para uma nail designer gerenciar atendimentos, clientes, despesas e faturamento, com lembretes por Web Push agendados via pg_cron e Edge Functions.",
+    tags: ["React 19", "Supabase", "PWA", "Tailwind CSS"],
+    code: "https://github.com/flplemos/gestaoananails",
+    live: "https://gestaoananails.vercel.app",
+    image: "/projects/ananails.webp",
+    highlight: true,
+  },
+  {
+    title: "Espetaria do Gaguinho — Pedidos",
+    desc: "Sistema de pedidos (POS/KDS) em tempo real: garçom lança a comanda no celular e ela aparece na hora na tela da churrasqueira e no caixa, via Supabase Realtime.",
+    tags: ["React 19", "Supabase Realtime", "Tailwind CSS"],
+    code: "https://github.com/flplemos/espetaria-mvp",
+    live: "https://espetaria-mvp.vercel.app",
+    image: "/projects/espetaria-mvp.webp",
+  },
+  {
+    title: "Espetaria do Gaguinho — Cardápio",
+    desc: "Cardápio digital com carrinho, combos personalizáveis, frete por CEP (ViaCEP), horário de funcionamento e pedido finalizado direto no WhatsApp.",
+    tags: ["JavaScript", "ViaCEP", "WhatsApp"],
+    code: "https://github.com/flplemos/espetariadogaguinho",
+    live: "https://flplemos.github.io/espetariadogaguinho/",
+    image: "/projects/cardapio.webp",
+  },
   {
     title: "Shorts Summary",
     desc: "App web que resume vídeos curtos do YouTube usando IA. Stack completa com Vite, Node.js, Express, FFmpeg e Xenova Transformers.",
     tags: ["JavaScript", "Node.js", "IA", "Vite"],
     code: "https://github.com/flplemos/shorts-summary",
     live: null,
-    highlight: true,
+    image: null,
   },
   {
     title: "Costs — Gerenciador de Projetos",
-    desc: "Sistema completo de gerenciamento de projetos e custos construído com React, com roteamento e estado global.",
+    desc: "Sistema de gerenciamento de projetos e custos construído com React, com roteamento e estado global.",
     tags: ["React", "JavaScript", "CSS"],
     code: "https://github.com/flplemos/costs",
     live: "https://costs-sepia.vercel.app/",
+    image: "/projects/costs.webp",
   },
   {
     title: "Pokédex Felps Edition",
-    desc: "Pokédex interativa consumindo PokéAPI com gráficos Chart.js para exibir stats dos Pokémons.",
+    desc: "Pokédex interativa consumindo a PokéAPI, com gráficos Chart.js para exibir os stats dos Pokémons.",
     tags: ["JavaScript", "PokéAPI", "Chart.js"],
     code: "https://github.com/flplemos/pokedex",
     live: "https://flplemos.github.io/pokedex/index.html",
-  },
-  {
-    title: "GTA 5 — Landing Page",
-    desc: "Landing page temática do GTA V com animações, parallax e design totalmente responsivo.",
-    tags: ["HTML", "CSS", "JavaScript"],
-    code: "https://github.com/flplemos/gta-v-landing-page",
-    live: "https://flplemos.github.io/gta-v-landing-page/index.html",
-  },
-  {
-    title: "Sunnyside Agency",
-    desc: "Desafio Frontend Mentor com layout responsivo complexo usando Bootstrap e técnicas modernas de CSS.",
-    tags: ["Bootstrap", "CSS", "Responsivo"],
-    code: "https://github.com/flplemos/frontend-mentor/tree/main/sunnyside-agency-landing-page-main",
-    live: "https://flplemos.github.io/frontend-mentor/sunnyside-agency-landing-page-main/index.html",
-  },
-  {
-    title: "Password Generator",
-    desc: "Gerador de senhas seguras com controle de comprimento, símbolos e caracteres especiais.",
-    tags: ["JavaScript", "HTML", "CSS"],
-    code: "https://github.com/flplemos/password_generator",
-    live: "https://flplemos.github.io/password_generator/index.html",
+    image: "/projects/pokedex.webp",
   },
 ];
 

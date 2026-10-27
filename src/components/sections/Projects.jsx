@@ -1,4 +1,4 @@
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight, Code2, Sparkles } from "lucide-react";
 import { PROJECTS } from "../../data/profile";
 import { GithubIcon } from "../BrandIcons";
 import SectionHeader from "../SectionHeader";
@@ -11,6 +11,22 @@ export default function Projects() {
         <ul className="projects" data-reveal-group>
           {PROJECTS.map((p) => (
             <li key={p.title} className={`glass project ${p.highlight ? "is-featured" : ""}`}>
+              <div className="project-media">
+                {p.image ? (
+                  <img
+                    src={p.image}
+                    alt={`Prévia de ${p.title}`}
+                    width={p.highlight ? 1200 : 800}
+                    height={p.highlight ? 750 : 500}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <span className="project-media-fallback" aria-hidden="true">
+                    <Code2 size={40} />
+                  </span>
+                )}
+              </div>
               {p.highlight && (
                 <p className="badge badge-accent">
                   <Sparkles size={14} aria-hidden="true" /> Destaque
