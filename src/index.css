@@ -1,3 +1,21 @@
+/* ─── FONTS ──────────────────────────────────────────────────────────────────
+   Self-hosted variable fonts (one file per family covers every weight), latin subset only:
+   no third-party requests. Both files are preloaded by the plugin in vite.config.js. */
+@font-face {
+  font-family: "IBM Plex Sans Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 700;
+  src: url("../node_modules/@fontsource-variable/ibm-plex-sans/files/ibm-plex-sans-latin-wght-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "JetBrains Mono Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url("../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2") format("woff2");
+}
+
 /* ─── TOKENS ─────────────────────────────────────────────────────────────────
    Source of truth: design-system/fl-portfolio/MASTER.md (palette, type, spacing)
    + design-system/fl-portfolio/pages/home.md (glass, radius, accent extension). */
@@ -16,14 +34,14 @@
   --color-border: #334155;
   --color-ring: #ffffff;
 
-  --glass-bg: rgba(14, 18, 35, 0.72);
-  --glass-bg-hover: rgba(20, 26, 48, 0.8);
+  --glass-bg: rgba(14, 18, 35, 0.84);
+  --glass-bg-hover: rgba(20, 26, 48, 0.9);
   --glass-border: rgba(248, 250, 252, 0.1);
   --glass-border-hover: rgba(34, 197, 94, 0.45);
   --glass-blur: 16px;
 
-  --font-heading: "JetBrains Mono", ui-monospace, monospace;
-  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --font-heading: "JetBrains Mono Variable", ui-monospace, monospace;
+  --font-body: "IBM Plex Sans Variable", system-ui, sans-serif;
 
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -77,8 +95,8 @@
   --color-accent-fg: #15803d;
   --color-accent-2-fg: #0369a1;
 
-  --glass-bg: rgba(255, 255, 255, 0.78);
-  --glass-bg-hover: rgba(255, 255, 255, 0.9);
+  --glass-bg: rgba(255, 255, 255, 0.86);
+  --glass-bg-hover: rgba(255, 255, 255, 0.94);
   --glass-border: rgba(15, 23, 42, 0.1);
   --glass-border-hover: rgba(21, 128, 61, 0.45);
   --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.08);
@@ -213,9 +231,13 @@ a {
 }
 
 /* ─── 3D BACKGROUND ─────────────────────────────────────────────────────── */
+/* Sized to the large viewport so mobile URL-bar show/hide never resizes the canvas (a
+   resize reallocates the WebGL buffers mid-scroll). */
 .scene {
   position: fixed;
-  inset: 0;
+  inset: 0 0 auto;
+  height: 100vh;
+  height: 100lvh;
   z-index: 0;
   pointer-events: none;
   animation: scene-in 0.8s var(--ease-out) both;
@@ -264,19 +286,14 @@ main,
 }
 
 /* ─── GLASS ─────────────────────────────────────────────────────────────── */
+/* Cards are translucent but not blurred: a backdrop-filter on every card would have to be
+   re-blurred each time the canvas behind it draws, i.e. on every animation and scroll
+   frame. Only the nav (one small strip) keeps a real blur. */
 .glass {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  backdrop-filter: blur(var(--glass-blur));
   box-shadow: var(--shadow-lg);
-}
-
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass {
-    background: var(--color-card);
-  }
 }
 
 /* ─── BUTTONS ───────────────────────────────────────────────────────────── */
@@ -574,7 +591,38 @@ main,
   box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
 }
 .hero-word {
-  white-space: nowrap; /* SplitText chars are inline-blocks: never break inside a word */
+  display: inline-block;
+  white-space: nowrap; /* chars are inline-blocks: never break inside a word */
+}
+.hero-char {
+  display: inline-block;
+}
+/* HERO INTRO: characters flip up one by one, then the rest of the block staggers in. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-char {
+    animation: hero-char 0.7s var(--ease-out) calc(var(--i) * 25ms) both;
+  }
+  .hero-anim {
+    animation: hero-rise 0.6s var(--ease-out) calc(0.55s + var(--n, 0) * 80ms) both;
+  }
+  .hero-anim:nth-child(3) { --n: 1; }
+  .hero-anim:nth-child(4) { --n: 2; }
+  .hero-anim:nth-child(5) { --n: 3; }
+  .hero-anim:nth-child(6) { --n: 4; }
+  .hero-anim:nth-child(7) { --n: 5; }
+  .hero-anim:nth-child(8) { --n: 6; }
+}
+@keyframes hero-char {
+  from {
+    opacity: 0;
+    transform: translateY(24px) rotateX(-40deg);
+  }
+}
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
 }
 .hero-name {
   font-size: clamp(2.75rem, 11vw, 6.5rem);

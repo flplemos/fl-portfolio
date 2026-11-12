@@ -1,44 +1,51 @@
-import { useLayoutEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useEffect, useRef } from "react";
 import { MapPin } from "lucide-react";
 import { EXPERIENCES } from "../../data/profile";
+import { isBelowFold, loadGsap } from "../../lib/gsap";
 import SectionHeader from "../SectionHeader";
-
-gsap.registerPlugin(ScrollTrigger);
 
 export default function Experience() {
   const root = useRef(null);
 
-  useLayoutEffect(() => {
-    const mm = gsap.matchMedia(root);
-    mm.add("(prefers-reduced-motion: no-preference)", () => {
-      // The rail draws itself with the scroll; each node lights up as the rail reaches it.
-      gsap.fromTo(
-        ".timeline-progress",
-        { scaleY: 0 },
-        {
-          scaleY: 1,
-          ease: "none",
-          scrollTrigger: { trigger: ".timeline", start: "top 70%", end: "bottom 60%", scrub: 1 },
-        },
-      );
-      gsap.utils.toArray(".timeline-item").forEach((item) => {
-        gsap.from(item.querySelector(".timeline-card"), {
-          autoAlpha: 0,
-          x: 24,
-          duration: 0.6,
-          ease: "expo.out",
-          scrollTrigger: { trigger: item, start: "top 80%", toggleActions: "play none none reverse" },
-        });
-        ScrollTrigger.create({
-          trigger: item,
-          start: "top 62%",
-          toggleClass: { targets: item, className: "is-reached" },
+  useEffect(() => {
+    let mm;
+    let cancelled = false;
+    loadGsap().then(({ gsap, ScrollTrigger }) => {
+      if (cancelled) return;
+      mm = gsap.matchMedia(root);
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        // The rail draws itself with the scroll; each node lights up as the rail reaches it.
+        gsap.fromTo(
+          ".timeline-progress",
+          { scaleY: 0 },
+          {
+            scaleY: 1,
+            ease: "none",
+            scrollTrigger: { trigger: ".timeline", start: "top 70%", end: "bottom 60%", scrub: 1 },
+          },
+        );
+        gsap.utils.toArray(".timeline-item").forEach((item) => {
+          if (isBelowFold(item)) {
+            gsap.from(item.querySelector(".timeline-card"), {
+              autoAlpha: 0,
+              x: 24,
+              duration: 0.6,
+              ease: "expo.out",
+              scrollTrigger: { trigger: item, start: "top 80%", toggleActions: "play none none reverse" },
+            });
+          }
+          ScrollTrigger.create({
+            trigger: item,
+            start: "top 62%",
+            toggleClass: { targets: item, className: "is-reached" },
+          });
         });
       });
     });
-    return () => mm.revert();
+    return () => {
+      cancelled = true;
+      mm?.revert();
+    };
   }, []);
 
   return (

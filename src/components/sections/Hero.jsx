@@ -1,37 +1,34 @@
-import { useLayoutEffect, useRef } from "react";
-import gsap from "gsap";
-import { SplitText } from "gsap/SplitText";
+import { Fragment } from "react";
 import { ArrowDown, MapPin, Mail } from "lucide-react";
 import { PROFILE, CONTACT } from "../../data/profile";
 import { GithubIcon, LinkedinIcon } from "../BrandIcons";
 import Typewriter from "../Typewriter";
 
-gsap.registerPlugin(SplitText);
+// The intro is pure CSS (see "HERO INTRO" in index.css) so it starts with the first paint:
+// the name is split into characters here and each one carries its stagger index.
+const NAME_WORDS = PROFILE.name.split(" ").reduce((words, word) => {
+  const start = words.reduce((n, w) => n + w.chars.length, 0);
+  return [...words, { start, chars: [...word] }];
+}, []);
 
 export default function Hero() {
-  const root = useRef(null);
-
-  useLayoutEffect(() => {
-    const mm = gsap.matchMedia(root);
-    mm.add("(prefers-reduced-motion: no-preference)", () => {
-      // Stagger List preset: character split on the short headline only.
-      const split = new SplitText(".hero-name", { type: "words,chars", wordsClass: "hero-word" });
-      const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
-      tl.from(split.chars, { autoAlpha: 0, y: 24, rotateX: -40, duration: 0.7, stagger: 0.025 })
-        .from(".hero-anim", { autoAlpha: 0, y: 16, duration: 0.6, stagger: 0.08 }, "-=0.4");
-      return () => split.revert();
-    });
-    return () => mm.revert();
-  }, []);
-
   return (
-    <section id="hero" className="hero" ref={root} aria-labelledby="hero-name">
+    <section id="hero" className="hero" aria-labelledby="hero-name">
       <div className="container hero-inner">
         <p className="hero-kicker hero-anim">
           <span className="status-dot" aria-hidden="true" /> Olá, eu sou
         </p>
         <h1 id="hero-name" className="hero-name" aria-label={PROFILE.name}>
-          {PROFILE.name}
+          {NAME_WORDS.map(({ start, chars }, w) => (
+            <Fragment key={start}>
+              {w > 0 && " "}
+              <span className="hero-word" aria-hidden="true">
+                {chars.map((ch, i) => (
+                  <span key={i} className="hero-char" style={{ "--i": start + i }}>{ch}</span>
+                ))}
+              </span>
+            </Fragment>
+          ))}
         </h1>
         <p className="hero-typed hero-anim">
           <Typewriter phrases={PROFILE.typed} />

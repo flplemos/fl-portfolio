@@ -24,10 +24,12 @@ import { useTheme } from "../hooks/useTheme";
 
 // Performance model:
 // - plain three.js with named imports (tree-shaken; no react-three-fiber/drei runtime);
-// - render on demand: nothing is drawn while the page is idle. A frame is requested when
-//   scroll, pointer, resize or theme change the target, and frames keep coming only until
-//   the damped values settle;
-// - DPR capped at 1.5, one lit mesh (flat-shaded standard material), the rest unlit.
+// - DPR capped at 1.5, one lit mesh (flat-shaded standard material), the rest unlit;
+// - scroll and pointer only write a target: all layout reads and all motion happen once per
+//   frame inside tick(), on values cached at resize time;
+// - while a spring is moving the scene draws every frame; once everything has settled only
+//   the slow idle drift is left, and that is drawn at ~30fps (no drift at all, and no loop,
+//   under prefers-reduced-motion).
 
 // One keyframe per section (same order as SECTIONS). x balances the layout: the object
 // sits opposite to where each section's content leans. x is a fraction of the content
@@ -83,6 +85,22 @@ const toFrame = (k, i, isMobile) => ({
   o: i * 0.6,
   c: i,
 });
+const KEYS = Object.keys(toFrame(KEYFRAMES[0], 0, false));
+
+// Critically damped spring (the "SmoothDamp" form): unlike plain exponential damping the
+// velocity is continuous, so the object eases in as well as out and discrete wheel steps
+// blend into one motion instead of a series of lurches.
+const SMOOTH_TIME = 0.32; // seconds to (roughly) reach the target
+const OMEGA = 2 / SMOOTH_TIME;
+function spring(s, to, dt) {
+  const x = OMEGA * dt;
+  const decay = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+  const delta = s.v - to;
+  const temp = (s.vel + OMEGA * delta) * dt;
+  s.vel = (s.vel - OMEGA * temp) * decay;
+  s.v = to + (delta + temp) * decay;
+}
+const IDLE_FRAME_MS = 30; // idle drift: every 2nd frame at 60Hz, every 4th at 120Hz
 
 function buildScene(canvas) {
   const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, stencil: false, powerPreference: "low-power" });
@@ -132,7 +150,7 @@ function buildScene(canvas) {
     renderer.dispose();
   };
 
-  return { renderer, scene, camera, group, orbit, point, shellMat, setTheme, dispose };
+  return { renderer, scene, camera, group, shell, orbit, point, shellMat, setTheme, dispose };
 }
 
 export default function Scene3D() {
@@ -149,54 +167,108 @@ export default function Scene3D() {
     } catch {
       return; // WebGL unavailable at runtime: the page simply has no 3D background
     }
-    const { renderer, scene, camera, group, orbit, point, shellMat } = three;
-    const target = toFrame(KEYFRAMES[0], 0, false);
+    const { renderer, scene, camera, group, shell, orbit, point, shellMat } = three;
     const pointer = { x: 0, y: 0 };
     const color = new Color();
     let palette = LIGHT_COLORS.dark;
     let raf = 0;
     let last = 0;
+    let drawn = 0;
+    let clock = 0;
 
-    const requestRender = () => {
-      if (!raf) raf = requestAnimationFrame(tick);
+    // Scroll → target. One pure function of the scroll position (no competing tweens, so
+    // jumping straight to any section always lands on the right keyframe). Section i blends
+    // in from the previous state while its top travels from the bottom of the viewport to
+    // 25% from the top. Section offsets and frames are cached: scrolling reads no layout.
+    const sections = SECTIONS.map(({ id }) => document.getElementById(id));
+    const mobileMq = matchMedia("(max-width: 899px)"); // same breakpoint as the CSS layout
+    const target = {};
+    let frames = [];
+    let tops = [];
+    let vh = 1;
+    let maxScroll = 0;
+    let stale = true;
+    const measure = () => {
+      frames = KEYFRAMES.map((k, i) => toFrame(k, i, mobileMq.matches));
+      tops = sections.map((el) => (el ? el.getBoundingClientRect().top + window.scrollY : Infinity));
+      vh = window.innerHeight;
+      maxScroll = document.documentElement.scrollHeight - vh;
+      stale = true;
+      requestRender();
     };
+    const updateTarget = () => {
+      stale = false;
+      Object.assign(target, frames[0]);
+      if (reduce) return;
+      const y = window.scrollY;
+      const atBottom = y >= maxScroll - 2;
+      for (let i = 1; i < tops.length; i++) {
+        let p = MathUtils.clamp((vh - (tops[i] - y)) / (0.75 * vh), 0, 1);
+        if (atBottom && i === tops.length - 1) p = 1; // short last section
+        if (p === 0) break;
+        for (const k of KEYS) target[k] += (frames[i][k] - target[k]) * p;
+      }
+    };
+
+    function requestRender() {
+      if (!raf) raf = requestAnimationFrame(tick);
+    }
+
+    measure();
+    updateTarget();
+    // Start on the right keyframe (the scene fades in via CSS; it must not fly in).
+    const state = Object.fromEntries(KEYS.map((k) => [k, { v: target[k], vel: 0 }]));
 
     function tick(now) {
       raf = 0;
       const dt = last ? Math.min((now - last) / 1000, 0.05) : 1 / 60;
       last = now;
-      let moving = false;
-      // Reduced motion jumps straight to the final state; otherwise damp and keep
-      // requesting frames until every value has settled.
-      const damp = (cur, to) => {
-        const next = reduce ? to : MathUtils.damp(cur, to, 5, dt);
-        if (Math.abs(next - to) > 1e-3) moving = true;
-        return next;
-      };
+      if (stale) updateTarget();
 
-      // Container-relative x → world x at the target depth.
+      let moving = false;
+      for (const k of KEYS) {
+        const s = state[k];
+        let to = target[k];
+        if (k === "rx") to -= pointer.y * 0.2;
+        else if (k === "ry") to += pointer.x * 0.25;
+        if (reduce) {
+          s.v = to; // reduced motion jumps straight to the final state
+          continue;
+        }
+        spring(s, to, dt);
+        if (Math.abs(s.v - to) > 1e-3 || Math.abs(s.vel) > 1e-3) moving = true;
+      }
+
+      if (!reduce) {
+        clock += dt;
+        // Nothing but the idle drift left: half the frames are enough for it.
+        if (!moving && now - drawn < IDLE_FRAME_MS) return requestRender();
+      }
+      drawn = now;
+
+      // Container-relative x → world x at the current depth.
       const w = canvas.clientWidth || 1;
-      const halfWidthWorld = TAN_HALF_FOV * (camera.position.z - target.z) * camera.aspect;
-      const worldX = target.x * (Math.min(w, CONTAINER_PX) / w) * halfWidthWorld;
-      group.position.set(damp(group.position.x, worldX), damp(group.position.y, target.y), damp(group.position.z, target.z));
-      group.rotation.set(
-        damp(group.rotation.x, target.rx - pointer.y * 0.2),
-        damp(group.rotation.y, target.ry + pointer.x * 0.25),
-        damp(group.rotation.z, target.rz),
-      );
-      group.scale.setScalar(damp(group.scale.x, target.s));
+      const halfWidthWorld = TAN_HALF_FOV * (camera.position.z - state.z.v) * camera.aspect;
+      const worldX = state.x.v * (Math.min(w, CONTAINER_PX) / w) * halfWidthWorld;
+      // Idle drift (clock stays 0 under reduced motion): a slow float plus counter-rotating
+      // shell and orbit, layered on top of the scroll-driven state.
+      group.position.set(worldX, state.y.v + Math.sin(clock * 0.7) * 0.06, state.z.v);
+      group.rotation.set(state.rx.v + Math.sin(clock * 0.4) * 0.04, state.ry.v + clock * 0.05, state.rz.v);
+      group.scale.setScalar(state.s.v);
+      shell.rotation.y = -clock * 0.09;
+      orbit.rotation.y = state.o.v + clock * 0.06;
       // The coloured light travels with the object so it stays lit wherever it moves.
       point.position.set(group.position.x + 2.5, group.position.y + 2, group.position.z + 3);
-      orbit.rotation.y = damp(orbit.rotation.y, target.o);
 
       // Interpolate the light colour between the two neighbouring section colours.
-      const i = Math.min(Math.floor(target.c), palette.length - 2);
-      color.copy(palette[i]).lerp(palette[i + 1], target.c - i);
+      const c = MathUtils.clamp(state.c.v, 0, palette.length - 1);
+      const i = Math.min(Math.floor(c), palette.length - 2);
+      color.copy(palette[i]).lerp(palette[i + 1], c - i);
       point.color.copy(color);
       shellMat.color.copy(color);
 
       renderer.render(scene, camera);
-      if (moving) requestRender();
+      if (moving || !reduce) requestRender();
       else last = 0;
     }
 
@@ -206,9 +278,13 @@ export default function Scene3D() {
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      drawn = 0;
       requestRender();
     });
     ro.observe(canvas);
+    // Fonts, images and breakpoints move the sections: re-measure when the page height changes.
+    const layoutRo = new ResizeObserver(measure);
+    layoutRo.observe(document.body);
 
     const onPointer = (e) => {
       pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
@@ -218,38 +294,18 @@ export default function Scene3D() {
     const finePointer = !reduce && matchMedia("(pointer: fine)").matches;
     if (finePointer) window.addEventListener("pointermove", onPointer, { passive: true });
 
-    // Scroll → target. One pure function of the current scroll position (no competing
-    // tweens, so jumping straight to any section always lands on the right keyframe); the
-    // damping in tick() provides the smoothing. Section i blends in from the previous state
-    // while its top travels from the bottom of the viewport to 25% from the top.
-    const sections = SECTIONS.map(({ id }) => document.getElementById(id));
-    const mobileMq = matchMedia("(max-width: 899px)"); // same breakpoint as the CSS layout
-    const KEYS = Object.keys(target);
-    const updateTarget = () => {
-      const frames = KEYFRAMES.map((k, i) => toFrame(k, i, mobileMq.matches));
-      Object.assign(target, frames[0]);
-      if (!reduce) {
-        const vh = window.innerHeight;
-        const atBottom = window.scrollY + vh >= document.documentElement.scrollHeight - 2;
-        for (let i = 1; i < sections.length; i++) {
-          if (!sections[i]) continue;
-          const top = sections[i].getBoundingClientRect().top;
-          let p = MathUtils.clamp((vh - top) / (0.75 * vh), 0, 1);
-          if (atBottom && i === sections.length - 1) p = 1; // short last section
-          if (p === 0) break;
-          for (const k of KEYS) target[k] += (frames[i][k] - target[k]) * p;
-        }
-      }
+    const onScroll = () => {
+      stale = true;
       requestRender();
     };
-    updateTarget();
-    window.addEventListener("scroll", updateTarget, { passive: true });
-    window.addEventListener("resize", updateTarget, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", measure, { passive: true });
 
     apiRef.current = {
       setTheme: (t) => {
         palette = LIGHT_COLORS[t];
         three.setTheme(t);
+        drawn = 0;
         requestRender();
       },
     };
@@ -257,9 +313,10 @@ export default function Scene3D() {
     return () => {
       apiRef.current = null;
       cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", updateTarget);
-      window.removeEventListener("resize", updateTarget);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measure);
       ro.disconnect();
+      layoutRo.disconnect();
       window.removeEventListener("pointermove", onPointer);
       three.dispose();
     };
